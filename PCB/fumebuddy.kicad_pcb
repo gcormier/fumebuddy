@@ -1283,7 +1283,7 @@
   (gr_text "NO SOLDER" (at 126 88) (layer F.SilkS) (tstamp 5C8C1F61)
     (effects (font (size 1 1) (thickness 0.1)))
   )
-  (gr_text "fumebuddy\nv2" (at 131 144.25) (layer F.SilkS) (tstamp 5C8C1F64)
+  (gr_text "fumebuddy\nv3" (at 131 144.25) (layer F.SilkS) (tstamp 5C8C1F64)
     (effects (font (size 1.5 1.5) (thickness 0.2)))
   )
   (gr_line (start 140 128.25) (end 140 149.75) (layer Edge.Cuts) (width 0.15))

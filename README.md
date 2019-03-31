@@ -14,7 +14,7 @@ Pull requests are accepted for additional functionality.
 All design files are using KiCad, which is a great open-source ECAD tool.
 
 ## BOM
-<iframe src="https://raw.githubusercontent.com/gcormier/fumebuddy/master/PCB/bom/ibom.html" width="800" height="400"></iframe>
+Interactive BOM can be found <a href src="https://raw.githubusercontent.com/gcormier/fumebuddy/master/PCB/bom/ibom.html">here</a>
 
 
 

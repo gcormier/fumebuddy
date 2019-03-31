@@ -120,8 +120,9 @@ void setup()
   
   
 
-  offHook();
-  delay(1000);
+  //offHook();
+  //delay(1000);
+  hookState = OFFHOOK;
   onHook();
 }
 

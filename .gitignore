@@ -13,6 +13,10 @@ _autosave-*
 *-rescue.lib
 *-save.pro
 *-save.kicad_pcb
+fp-info-cache
+gerber/
+plot/
+plots/
 
 # vMicro board.txt
 board.txt

@@ -38,10 +38,129 @@ HTTPClient http;
 WebServer server;
 AutoConnect Portal(server);
 AutoConnectConfig acConfig;
+AutoConnectAux espurna_setting;
 
 String serverName;
 String apiKey;
 HookState currentState;
+
+
+
+bool readHookState()
+{
+  return digitalRead(PIN_SENSOR);
+}
+
+
+
+void startDevice()
+{
+  http.begin("http://" + serverName + "/api/relay/0?apikey=" + apiKey + "&value=1");
+  http.GET();
+  http.end();
+}
+
+void stopDevice()
+{
+  http.begin("http://" + serverName + "/api/relay/0?apikey=" + apiKey + "&value=0");
+  http.GET();
+  http.end();
+}
+
+void toggleDevice()
+{
+  http.begin("http://" + serverName + "/api/relay/0?apikey=" + apiKey + "&value=2");
+  http.GET();
+  http.end();
+}
+
+
+void offHook()
+{
+  if (hookState == ONHOOK)
+  {
+    digitalWrite(PIN_RELAY_NO, LOW);
+    hookState = OFFHOOK;
+    startDevice();
+    onHookMillis = 0;
+    Serial.println("Going off hook");
+  }
+}
+
+void onHook()
+{
+  if (hookState == OFFHOOK)
+  {
+    digitalWrite(PIN_RELAY_NO, HIGH);
+    hookState = ONHOOK;
+    //stopDevice();
+    onHookMillis = millis() + (ONHOOK_DELAY * 1000L);
+    Serial.println("Going on hook");
+  }
+}
+
+
+// Load parameters saved with  saveParams from SPIFFS into the
+// elements defined in /mqtt_setting JSON.
+String loadParams(AutoConnectAux& aux, PageArgument& args)
+{
+  (void)(args);
+  File param = SPIFFS.open(PARAM_FILE, "r");
+  if (param)
+  {
+    if (aux.loadElement(param))
+      Serial.println(PARAM_FILE " loaded");
+    else
+      Serial.println(PARAM_FILE " failed to load");
+    param.close();
+  }
+  else
+  {
+    Serial.println(PARAM_FILE " open failed");
+    Serial.println("If you get error as 'SPIFFS: mount failed, -10025', Please modify with 'SPIFFS.begin(true)'.");
+  }
+  return String("");
+}
+
+
+String saveParams(AutoConnectAux& aux, PageArgument& args)
+{
+  AutoConnectInput& espurnaserver = espurna_setting.getElement<AutoConnectInput>("espurnaserver");
+  serverName = espurnaserver.value;
+  serverName.trim();
+
+  AutoConnectInput& apikey = espurna_setting.getElement<AutoConnectInput>("apikey");
+  apiKey = apikey.value;
+  apiKey.trim();
+
+  File param = SPIFFS.open(PARAM_FILE, "w");
+  espurna_setting.saveElement(param, { "espurnaserver", "apikey" });
+  param.close();
+  
+  AutoConnectText&  echo = aux.getElement<AutoConnectText>("parameters");
+  echo.value = "Server: " + serverName;
+  echo.value += "API Key: " + apiKey + "<br>";
+  
+  return String("");
+}
+
+void handleRoot()
+{
+  String  content =
+    "<html>"
+    "<head>"
+    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+    "</head>"
+    "<body>"
+    "<iframe width=\"450\" height=\"260\" style=\"transform:scale(0.79);-o-transform:scale(0.79);-webkit-transform:scale(0.79);-moz-transform:scale(0.79);-ms-transform:scale(0.79);transform-origin:0 0;-o-transform-origin:0 0;-webkit-transform-origin:0 0;-moz-transform-origin:0 0;-ms-transform-origin:0 0;border: 1px solid #cccccc;\" src=\"https://thingspeak.com/channels/454951/charts/1?bgcolor=%23ffffff&color=%23d62020&dynamic=true&type=line\"></iframe>"
+    "<p style=\"padding-top:5px;text-align:center\">" AUTOCONNECT_LINK(COG_24) "</p>"
+    "</body>"
+    "</html>";
+
+  WiFiWebServer&  webServer = Portal.host();
+  webServer.send(200, "text/html", content);
+}
+
 
 void setup()
 {
@@ -100,8 +219,8 @@ void setup()
   acConfig.portalTimeout = 300; // Timeout after 5 minutes
   Portal.config(acConfig);
   
-  AutoConnectAux *espurna_setting = Portal.aux("/espurna");
-  Portal.load(FPSTR(AUX_espurna_settings));
+  espurna_setting.load(AUX_espurna_settings);
+  Portal.join({espurna_setting});
 
   Portal.on(AUX_SETTING_URI, loadParams);
   Portal.on(AUX_SAVE_URI, saveParams);
@@ -126,6 +245,7 @@ void setup()
   onHook();
 }
 
+
 void loop()
 {
   currentMillis = millis();
@@ -148,119 +268,4 @@ void loop()
     ArduinoOTA.handle();
   }
   Portal.handleClient();
-}
-
-bool readHookState()
-{
-  return digitalRead(PIN_SENSOR);
-}
-
-
-
-void offHook()
-{
-  if (hookState == ONHOOK)
-  {
-    digitalWrite(PIN_RELAY_NO, LOW);
-    hookState = OFFHOOK;
-    startDevice();
-    onHookMillis = 0;
-    Serial.println("Going off hook");
-  }
-}
-
-void onHook()
-{
-  if (hookState == OFFHOOK)
-  {
-    digitalWrite(PIN_RELAY_NO, HIGH);
-    hookState = ONHOOK;
-    //stopDevice();
-    onHookMillis = millis() + (ONHOOK_DELAY * 1000L);
-    Serial.println("Going on hook");
-  }
-}
-
-void startDevice()
-{
-  http.begin("http://" + serverName + "/api/relay/0?apikey=" + apiKey + "&value=1");
-  http.GET();
-  http.end();
-}
-
-void stopDevice()
-{
-  http.begin("http://" + serverName + "/api/relay/0?apikey=" + apiKey + "&value=0");
-  http.GET();
-  http.end();
-}
-
-void toggleDevice()
-{
-  http.begin("http://" + serverName + "/api/relay/0?apikey=" + apiKey + "&value=2");
-  http.GET();
-  http.end();
-}
-
-// Load parameters saved with  saveParams from SPIFFS into the
-// elements defined in /mqtt_setting JSON.
-String loadParams(AutoConnectAux& aux, PageArgument& args)
-{
-  (void)(args);
-  File param = SPIFFS.open(PARAM_FILE, "r");
-  if (param)
-  {
-    if (aux.loadElement(param))
-      Serial.println(PARAM_FILE " loaded");
-    else
-      Serial.println(PARAM_FILE " failed to load");
-    param.close();
-  }
-  else
-  {
-    Serial.println(PARAM_FILE " open failed");
-    Serial.println("If you get error as 'SPIFFS: mount failed, -10025', Please modify with 'SPIFFS.begin(true)'.");
-  }
-  return String("");
-}
-
-
-String saveParams(AutoConnectAux& aux, PageArgument& args)
-{
-  AutoConnectAux*   espurna_setting = Portal.where();
-
-  AutoConnectInput& espurnaserver = espurna_setting->getElement<AutoConnectInput>("espurnaserver");
-  serverName = espurnaserver.value;
-  serverName.trim();
-
-  AutoConnectInput& apikey = espurna_setting->getElement<AutoConnectInput>("apikey");
-  apiKey = apikey.value;
-  apiKey.trim();
-
-  File param = SPIFFS.open(PARAM_FILE, "w");
-  espurna_setting->saveElement(param, { "espurnaserver", "apikey" });
-  param.close();
-  
-  AutoConnectText&  echo = aux.getElement<AutoConnectText>("parameters");
-  echo.value = "Server: " + serverName;
-  echo.value += "API Key: " + apiKey + "<br>";
-  
-  return String("");
-}
-
-void handleRoot()
-{
-  String  content =
-    "<html>"
-    "<head>"
-    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
-    "</head>"
-    "<body>"
-    "<iframe width=\"450\" height=\"260\" style=\"transform:scale(0.79);-o-transform:scale(0.79);-webkit-transform:scale(0.79);-moz-transform:scale(0.79);-ms-transform:scale(0.79);transform-origin:0 0;-o-transform-origin:0 0;-webkit-transform-origin:0 0;-moz-transform-origin:0 0;-ms-transform-origin:0 0;border: 1px solid #cccccc;\" src=\"https://thingspeak.com/channels/454951/charts/1?bgcolor=%23ffffff&color=%23d62020&dynamic=true&type=line\"></iframe>"
-    "<p style=\"padding-top:5px;text-align:center\">" AUTOCONNECT_LINK(COG_24) "</p>"
-    "</body>"
-    "</html>";
-
-  WiFiWebServer&  webServer = Portal.host();
-  webServer.send(200, "text/html", content);
 }

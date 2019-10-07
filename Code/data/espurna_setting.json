@@ -1,0 +1,44 @@
+{
+  "title": "espurna Setting",
+  "uri": "/espurna_setting",
+  "menu": true,
+  "element": [
+    {
+      "name": "style",
+      "type": "ACStyle",
+      "value": "label+input,label+select{position:sticky;left:120px;width:230px!important;box-sizing:border-box;}"
+    },
+    {
+      "name": "caption",
+      "type": "ACText",
+      "value": "Enter your values from the ESPURNA Admin page. Make sure \"Restful API\" is disabled!",
+      "style": "font-family:serif;color:#4682b4;"
+    },
+    {
+      "name": "espurnaserver",
+      "type": "ACInput",
+      "value": "",
+      "placeholder": "espurna IP or hostname",
+      "label": "espurna server"
+    },
+		{
+      "name": "espurnaapikey",
+      "type": "ACInput",
+      "value": "",
+      "placeholder": "espurna API key",
+      "label": "espurna API key"
+    },
+    {
+      "name": "save",
+      "type": "ACSubmit",
+      "value": "Save&Start",
+      "uri": "/espurna_save"
+    },
+    {
+      "name": "discard",
+      "type": "ACSubmit",
+      "value": "Discard",
+      "uri": "/"
+    }
+  ]
+}

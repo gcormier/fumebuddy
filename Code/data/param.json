@@ -1,0 +1,14 @@
+[
+  {
+    "name": "espurnaserver",
+    "type": "ACInput",
+    "value": "",
+    "label": "espurna Server"
+  },
+  {
+    "name": "espurnaapikey",
+    "type": "ACInput",
+    "value": "",
+    "label": "espurna API key"
+  }
+]

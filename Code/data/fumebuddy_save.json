@@ -1,6 +1,6 @@
 {
-  "title": "espurna Setting",
-  "uri": "/espurna_save",
+  "title": "Fumebuddy Settings",
+  "uri": "/fumebuddy_save",
   "menu": false,
   "element": [
     {

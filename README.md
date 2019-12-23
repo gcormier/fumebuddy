@@ -13,6 +13,9 @@ Pull requests are accepted for additional functionality.
 ## Building
 All design files are using KiCad, which is a great open-source ECAD tool.
 
+## TASMOTA Config
+Turn off MQTT if not needed. This will allow the status LED to work based on the on/off status of the relay. "SetOption3 0" in the tasmota console.
+
 ## BOM
 Interactive BOM can be found <a href src="https://raw.githubusercontent.com/gcormier/fumebuddy/master/PCB/bom/ibom.html">here</a>
 

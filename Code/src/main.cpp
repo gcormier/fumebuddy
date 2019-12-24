@@ -41,8 +41,8 @@ AutoConnect portal;
 AutoConnectConfig config;
 WiFiClient wifiClient;
 
-AutoConnectAux fumebuddySettingsAux(AUX_SETTINGS, "Fumebuddy Settings");
-AutoConnectAux fumebuddySavedAux(AUX_SAVED, "Fumebuddy Settings", false);
+//AutoConnectAux fumebuddySettingsAux(AUX_SETTINGS, "Fumebuddy Settings");
+//AutoConnectAux fumebuddySavedAux(AUX_SAVED, "Fumebuddy Settings", false);
 
 String fumebuddyOn, fumebuddyOff, fumebuddyToggle;
 
@@ -125,14 +125,14 @@ String saveParams(AutoConnectAux &aux, PageArgument &args)
   fumebuddyToggle.trim();
 
   File param = SPIFFS.open(PARAM_FILE, "w");
-  portal.aux("/espurna_setting")->saveElement(param, {"urlon", "urloff", "urltoggle"});
+  portal.aux("/fumebuddy_setting")->saveElement(param, {"urlon", "urloff", "urltoggle"});
   param.close();
 
   // Echo back saved parameters to AutoConnectAux page.
   AutoConnectText &echo = aux["parameters"].as<AutoConnectText>();
   echo.value += "url on: " + fumebuddyOn + "<br>";
   echo.value += "url off: " + fumebuddyOff + "<br>";
-  echo.value += "url off: " + fumebuddyToggle + "<br>";
+  echo.value += "url toggle: " + fumebuddyToggle + "<br>";
 
   return String("");
 }
@@ -153,7 +153,6 @@ void handleRoot()
   webServer.send(200, "text/html", content);
 }
 
-// Load AutoConnectAux JSON from SPIFFS.
 bool loadAux(const String auxName)
 {
   bool rc = false;
@@ -197,18 +196,24 @@ void setup()
   ledcWrite(0, 0);
 
 
+  loadAux(AUX_SETTINGS);
+  loadAux(AUX_SAVED);
+  AutoConnectAux* setting = portal.aux(AUX_SETTINGS);
+
   // Setup AutoConfig
   config.bootUri = AC_ONBOOTURI_HOME;
   config.homeUri = "/";
   config.hostName = String("fumebuddy") + GET_CHIPID();
   portal.config(config);
 
-  portal.join({fumebuddySettingsAux, fumebuddySavedAux});
   PageArgument args;
-  loadParams(fumebuddySettingsAux, args);
-  AutoConnectInput &e_on = fumebuddySettingsAux["urlon"].as<AutoConnectInput>();
-  AutoConnectInput &e_off = fumebuddySettingsAux["urloff"].as<AutoConnectInput>();
-  AutoConnectInput &e_toggle = fumebuddySettingsAux["urltoggle"].as<AutoConnectInput>();
+  AutoConnectAux& fumebuddy_setting = *setting;
+  if (setting)
+  {
+  loadParams(fumebuddy_setting, args);
+  AutoConnectInput &e_on = fumebuddy_setting["urlon"].as<AutoConnectInput>();
+  AutoConnectInput &e_off = fumebuddy_setting["urloff"].as<AutoConnectInput>();
+  AutoConnectInput &e_toggle = fumebuddy_setting["urltoggle"].as<AutoConnectInput>();
 
   fumebuddyOn = e_on.value;
   fumebuddyOff = e_off.value;
@@ -221,6 +226,10 @@ void setup()
 
   portal.on(AUX_SETTINGS, loadParams);
   portal.on(AUX_SAVED, saveParams);
+  }
+  else
+    Serial.println("aux. load error");
+
 
   Serial.print("WiFi\n");
   if (portal.begin())
@@ -236,17 +245,6 @@ void setup()
       delay(100);
       yield();
     }
-  }
-
-  // Debug Spiffs
-  File root = SPIFFS.open("/");
-  File file = root.openNextFile();
-
-  while (file)
-  {
-    Serial.print("FILE: ");
-    Serial.println(file.name());
-    file = root.openNextFile();
   }
 
   //Setup OTA

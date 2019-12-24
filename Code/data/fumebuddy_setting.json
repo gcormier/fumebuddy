@@ -38,7 +38,7 @@
     {
       "name": "save",
       "type": "ACSubmit",
-      "value": "Save&Start",
+      "value": "Save",
       "uri": "/fumebuddy_save"
     },
     {

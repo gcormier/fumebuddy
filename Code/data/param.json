@@ -15,6 +15,6 @@
     "name": "urltoggle",
     "type": "ACInput",
     "value": "",
-    "label": "url togglePARAM"
+    "label": "url toggle"
   }
 ] 

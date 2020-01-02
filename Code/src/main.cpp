@@ -15,14 +15,17 @@
 #define AUX_SAVED     "/fumebuddy_save"
 
 // Fumebuddy Definitions
-#define PIN_SENSOR 17
-#define PIN_RELAY_AUX 14
-#define PIN_RELAY_NC 5
-#define PIN_RELAY_NO 12
-#define PIN_BUZZER 26
+#define GPIO_SENSOR     17
+#define GPIO_RELAY_AUX  14
+#define GPIO_RELAY_NC   5
+#define GPIO_RELAY_NO   12
+#define GPIO_BUZZER     26
+#define TOUCH_INPUT     T7
+#define TOUCH_THRESHOLD 50
+#define TOUCH_MINLENGTH 250
 #define OFFHOOK HIGH
 #define ONHOOK LOW
-#define ONHOOK_DELAY 5L // Delay before turning off in seconds
+#define ONHOOK_DELAY    5L // Delay before turning off in seconds
 
 enum class HookState
 {
@@ -34,15 +37,13 @@ bool hookState = ONHOOK;
 uint32_t currentMillis = 0;
 uint32_t onHookMillis = 0;
 HookState currentState;
+bool triggerTouch = false, handledTouch = false;
 
 typedef WebServer WiFiWebServer;
-
+uint32_t touchMillis;
 AutoConnect portal;
 AutoConnectConfig config;
 WiFiClient wifiClient;
-
-//AutoConnectAux fumebuddySettingsAux(AUX_SETTINGS, "Fumebuddy Settings");
-//AutoConnectAux fumebuddySavedAux(AUX_SAVED, "Fumebuddy Settings", false);
 
 String fumebuddyOn, fumebuddyOff, fumebuddyToggle;
 
@@ -50,7 +51,7 @@ HTTPClient http;
 
 bool readHookState()
 {
-  return digitalRead(PIN_SENSOR);
+  return digitalRead(GPIO_SENSOR);
 }
 
 void startDevice()
@@ -58,6 +59,11 @@ void startDevice()
   http.begin(fumebuddyOn);
   http.GET();
   http.end();
+  ledcWriteNote(0, NOTE_C, 5);
+  delay(125);
+  ledcWriteNote(0, NOTE_D, 5);
+  delay(125);
+  ledcWrite(0, 0);
 }
 
 void stopDevice()
@@ -65,6 +71,11 @@ void stopDevice()
   http.begin(fumebuddyOff);
   http.GET();
   http.end();
+  ledcWriteNote(0, NOTE_D, 5);
+  delay(125);
+  ledcWriteNote(0, NOTE_C, 5);
+  delay(125);
+  ledcWrite(0, 0);
 }
 
 void toggleDevice()
@@ -72,13 +83,18 @@ void toggleDevice()
   http.begin(fumebuddyToggle);
   http.GET();
   http.end();
+  ledcWriteNote(0, NOTE_C, 5);
+  delay(125);
+  ledcWriteNote(0, NOTE_C, 5);
+  delay(125);
+  ledcWrite(0, 0);
 }
 
 void offHook()
 {
   if (hookState == ONHOOK)
   {
-    digitalWrite(PIN_RELAY_NO, LOW);
+    digitalWrite(GPIO_RELAY_NO, LOW);
     hookState = OFFHOOK;
     startDevice();
     onHookMillis = 0;
@@ -90,7 +106,7 @@ void onHook()
 {
   if (hookState == OFFHOOK)
   {
-    digitalWrite(PIN_RELAY_NO, HIGH);
+    digitalWrite(GPIO_RELAY_NO, HIGH);
     hookState = ONHOOK;
     //stopDevice();
     onHookMillis = millis() + (ONHOOK_DELAY * 1000L);
@@ -168,6 +184,27 @@ bool loadAux(const String auxName)
   return rc;
 }
 
+void readTouch()
+{
+  int touchInput = touchRead(TOUCH_INPUT);
+  // Touched and we weren't touched before
+  if (touchInput < TOUCH_THRESHOLD && touchMillis == 0)
+  {
+    touchMillis = currentMillis;
+  }
+  // Still touched, was previously touched, longer then min touch length and hasn't been fired yet
+  else if (touchInput < TOUCH_THRESHOLD && currentMillis - touchMillis > TOUCH_MINLENGTH && handledTouch == false)
+    triggerTouch = true;
+
+  // Not touched, reset everything
+  if (touchInput > TOUCH_THRESHOLD)
+  {
+    touchMillis = 0;
+    triggerTouch = false;
+    handledTouch = false;
+  }
+}
+
 void setup()
 {
   delay(250);
@@ -176,16 +213,20 @@ void setup()
   SPIFFS.begin();
 
   // Fumebuddy setup
-  pinMode(PIN_RELAY_NO, OUTPUT);
-  pinMode(PIN_RELAY_NC, OUTPUT);
-  pinMode(PIN_SENSOR, INPUT_PULLUP);
-  pinMode(PIN_RELAY_AUX, OUTPUT);
+  pinMode(GPIO_RELAY_NO, OUTPUT);
+  pinMode(GPIO_RELAY_NC, OUTPUT);
+  pinMode(GPIO_SENSOR, INPUT_PULLUP);
+  pinMode(GPIO_RELAY_AUX, OUTPUT);
+    
+  // This is a bodge for GPIO25 on rev 4 versions of the board, so we don't affect the actual touch input of GPIO27.
+  pinMode(25, INPUT);
 
-  digitalWrite(PIN_RELAY_NC, HIGH);
+
+  digitalWrite(GPIO_RELAY_NC, HIGH);
   currentMillis = millis();
 
   ledcSetup(0, 1E5, 12);
-  ledcAttachPin(PIN_BUZZER, 0);
+  ledcAttachPin(GPIO_BUZZER, 0);
 
   ledcWriteNote(0, NOTE_C, 5);
   delay(125);
@@ -304,9 +345,23 @@ void loop()
     onHookMillis = 0;
   }
 
+  readTouch();
+
+  if (triggerTouch)
+  {
+    toggleDevice();
+    triggerTouch = false;
+    handledTouch = true;
+  }
+
+  Serial.println(touchRead(TOUCH_INPUT));
+
   if (WiFi.status() == WL_CONNECTED)
   {
     ArduinoOTA.handle();
   }
   portal.handleClient();
+
+
 }
+

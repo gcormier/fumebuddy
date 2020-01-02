@@ -108,7 +108,6 @@ void onHook()
   {
     digitalWrite(GPIO_RELAY_NO, HIGH);
     hookState = ONHOOK;
-    //stopDevice();
     onHookMillis = millis() + (ONHOOK_DELAY * 1000L);
     Serial.println("Going on hook");
   }
@@ -218,9 +217,8 @@ void setup()
   pinMode(GPIO_SENSOR, INPUT_PULLUP);
   pinMode(GPIO_RELAY_AUX, OUTPUT);
     
-  // This is a bodge for GPIO25 on rev 4 versions of the board, so we don't affect the actual touch input of GPIO27.
+  // This is a bodge for GPIO25 on rev 3 versions of the board, so we don't affect the actual touch input of GPIO27.
   pinMode(25, INPUT);
-
 
   digitalWrite(GPIO_RELAY_NC, HIGH);
   currentMillis = millis();
@@ -361,7 +359,4 @@ void loop()
     ArduinoOTA.handle();
   }
   portal.handleClient();
-
-
 }
-

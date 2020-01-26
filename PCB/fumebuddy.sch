@@ -1,5 +1,5 @@
 EESchema Schematic File Version 4
-EELAYER 30 0
+EELAYER 29 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -304,7 +304,7 @@ Wire Wire Line
 Wire Wire Line
 	6450 2250 6550 2250
 NoConn ~ 6450 3650
-NoConn ~ 6450 3350
+NoConn ~ 6450 3550
 NoConn ~ 6450 2950
 NoConn ~ 6450 3250
 NoConn ~ 6450 3150
@@ -595,6 +595,10 @@ F 3 "" H 7300 3050 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	7300 3050 7300 2950
+Wire Wire Line
+	6450 3350 6900 3350
+Wire Wire Line
+	6900 3350 6900 2950
 $Comp
 L Device:Buzzer BZ1
 U 1 1 5C81CA32
@@ -680,8 +684,4 @@ Wire Notes Line
 	1350 4450 2250 4450
 Text Notes 1650 4450 0    50   ~ 0
 Power
-Wire Wire Line
-	6450 3550 6900 3550
-Wire Wire Line
-	6900 2950 6900 3550
 $EndSCHEMATC

@@ -19,18 +19,24 @@ FumeBuddy is an ESP32 replacement for the switch housing on the Hakko FX-950, FX
 
 ## Configuration
 ### FumeBuddy
+<img src="https://github.com/gcormier/fumebuddy/blob/master/docs/tasmota_1.png?raw=true" height="200px" />
+<img src="https://github.com/gcormier/fumebuddy/blob/master/docs/tasmota_2.png?raw=true" height="200px" />
 - FumeBuddy is pre-flashed with software which uses [Autoconnect](https://hieromon.github.io/AutoConnect/index.html)
 - After powering up FumeBuddy, wait 30-60 seconds. You should find a new WiFi SSID to which you can connect and configure your WiFi settings as well as FumeBuddy settings
 - If there are issues connecting to WiFi, FumeBuddy will go back to hosting it's own WiFi network on which you can reconfigure the settings
 
 ### Tasmota
 - Please visit the [Tasmota documentation](https://github.com/arendst/Tasmota/wiki/Commands) for reference
-- Likely you are interested in these commands
+- You need to get your smart plug working independantly of FumeBuddy. No support is provided for this - tasmota has an active [Discord community](https://discord.gg/Ks2Kzd4) if you need help!
+- If you are at the point that these commands properly toggle your switch, you're good to go!
 ````
 http://<ip>/cm?cmnd=Power%20TOGGLE
 http://<ip>/cm?cmnd=Power%20On
 http://<ip>/cm?cmnd=Power%20off
 ````
+
+### Other Devices
+- Ultimately, your goal is to have 3 URL's available which will control your smart device. Anything which can achieve this is controllable by FumeBuddy
 
 ## Operation
 - If FumeBuddy is NOT powered, the iron will work as it did before with sleep function

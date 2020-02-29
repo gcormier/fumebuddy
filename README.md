@@ -19,14 +19,23 @@ FumeBuddy is an ESP32 replacement for the switch housing on the Hakko FX-950, FX
 
 ## Configuration
 ### FumeBuddy
+- FumeBuddy is pre-flashed with software which uses [Autoconnect](https://hieromon.github.io/AutoConnect/index.html)
+- After powering up FumeBuddy, wait 30-60 seconds. You should find a new WiFi SSID (esp32ap) to which you can connect (password 12345678)
+
+<img src="https://github.com/gcormier/fumebuddy/blob/master/docs/esp32ap.png?raw=true" height="200px" />
+
+- You should receive a prompt that your WiFi network needs sign-in.
+<img src="https://github.com/gcormier/fumebuddy/blob/master/docs/esp32ap-signin.png?raw=true" height="200px" />
+
+- You can now configure your WiFi settings, and optionally FumeBuddy settings, although this is easier done from your desktop if you've done this on your mobile.
+<img src="https://github.com/gcormier/fumebuddy/blob/master/docs/esp32ap-signin.png?raw=true" height="200px" />
 <img src="https://github.com/gcormier/fumebuddy/blob/master/docs/tasmota_1.png?raw=true" height="200px" />
 <img src="https://github.com/gcormier/fumebuddy/blob/master/docs/tasmota_2.png?raw=true" height="200px" />
-- FumeBuddy is pre-flashed with software which uses [Autoconnect](https://hieromon.github.io/AutoConnect/index.html)
-- After powering up FumeBuddy, wait 30-60 seconds. You should find a new WiFi SSID to which you can connect and configure your WiFi settings as well as FumeBuddy settings
+
 - If there are issues connecting to WiFi, FumeBuddy will go back to hosting it's own WiFi network on which you can reconfigure the settings
 
 ### Tasmota
-- Please visit the [Tasmota documentation](https://github.com/arendst/Tasmota/wiki/Commands) for reference
+- Please visit the [Tasmota documentation](https://tasmota.github.io/docs/#/Commands?id=with-web-requests) for reference
 - You need to get your smart plug working independantly of FumeBuddy. No support is provided for this - tasmota has an active [Discord community](https://discord.gg/Ks2Kzd4) if you need help!
 - If you are at the point that these commands properly toggle your switch, you're good to go!
 ````

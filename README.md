@@ -1,23 +1,52 @@
 <img src="https://github.com/gcormier/fumebuddy/blob/master/docs/board-3d.png?raw=true" height="200px" /> <img src="https://github.com/gcormier/fumebuddy/blob/master/docs/back-1.png?raw=true" height="200px" /> <img src="https://github.com/gcormier/fumebuddy/blob/master/docs/back-2.png?raw=true" height="200px" />
 
-# fumebuddy
-Fumebuddy is an ESP32 powered replacement for the Hakko FX-951's on-hook switch. I've posted <a href="https://www.youtube.com/watch?v=lx5LyRIb3mM">a video</a> briefly going over the idea behind it.
+# FumeBuddy
+FumeBuddy is an ESP32 replacement for the switch housing on the Hakko FX-950, FX-951 and FX-952. Out of the box, it was designed to toggle a fume extractor via a smart switch flashed with [Tasmota](https://tasmota.github.io/docs/#/).
 
-The default behaviour is to control an <a href="https://github.com/xoseperez/espurna">espurna</a> powered smart-switch. However, since it is open source, fumebuddy can be made to do almost anything you'd like.
+## Design Goals
+- Easily hacked
+- Replace stock housing
+- Default behavior when un-powered
 
-<a href="https://github.com/Hieromon/AutoConnect">AutoConnect</a> is used to handle configuring WiFi as well as various options after the intial setup is completed.
+## Video
+[See FumeBuddy explained and in action](https://www.youtube.com/watch?v=eo5WyHWy1So)
 
-## Contributing
-Pull requests are accepted for additional functionality.
+## Hardware Installation
+- Remove the old housing
+- Transfer the spring from the old housing to the new housing
+- Install using the old screws
+- If you'd like the manual capacitive touch function and did not order it, you can solder a single wire to the appropriate jumper
 
-## Building
-All design files are using KiCad, which is a great open-source ECAD tool.
+## Configuration
+### FumeBuddy
+- FumeBuddy is pre-flashed with software which uses [Autoconnect](https://hieromon.github.io/AutoConnect/index.html)
+- After powering up FumeBuddy, wait 30-60 seconds. You should find a new WiFi SSID to which you can connect and configure your WiFi settings as well as FumeBuddy settings
+- If there are issues connecting to WiFi, FumeBuddy will go back to hosting it's own WiFi network on which you can reconfigure the settings
+
+### Tasmota
+- Please visit the [Tasmota documentation](https://github.com/arendst/Tasmota/wiki/Commands) for reference
+- Likely you are interested in these commands
+````
+http://<ip>/cm?cmnd=Power%20TOGGLE
+http://<ip>/cm?cmnd=Power%20On
+http://<ip>/cm?cmnd=Power%20off
+````
+
+## Operation
+- If FumeBuddy is NOT powered, the iron will work as it did before with sleep function
+- If FumeBuddy is powered via the 5V USB port, it will work based on what is programmed. By default, it will turn the plug ON when the iron is lifted. It will turn the plug OFF 5 seconds after the iron is put back
+- Manual on/off can be by touching the capacitive wire on top of the housing for 1 second
+
+## Pricing
+The BOM cost alone for the product is around 23USD, which is rather expensive. I order **genuine** parts from 1st party distributors in Canada, which in this case includes Omron switches, solid state relays and the ESP32. I did not go cheap on this as owners of Hakko's are likely looking for quality components throughout. The rest includes my labor costs to assembly, flash and test the unit. As it is open sourced, you are welcome to build your own! You can cheap out on some components if you'd like. Knockoff relays and omitting the audio buzzer will save you a few dollars.
+
+## Lead Time
+As the BOM costs are quite high, I will be keeping limited number of parts on hand, and will assemble them as when ordered.
+
 
 ## TASMOTA Config
 Turn off MQTT if not needed. This will allow the status LED to work based on the on/off status of the relay. "SetOption3 0" in the tasmota console.
 
-## BOM
-Interactive BOM can be found <a href src="https://raw.githubusercontent.com/gcormier/fumebuddy/master/PCB/bom/ibom.html">here</a>
 
 
 

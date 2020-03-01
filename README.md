@@ -67,7 +67,17 @@ As the BOM costs are quite high, I will be keeping limited number of parts on ha
 Turn off MQTT if not needed. This will allow the status LED to work based on the on/off status of the relay. "SetOption3 0" in the tasmota console.
 
 # FAQ
-##
+## How can I reset FumeBuddy?
+If you connect to the FumeBuddy via your web browser, there is a Reset option in the menu which will wipe all settings.
+
+## How do I hack/update firmware?
+FumeBuddy uses [PlatformIO](https://platformio.org/). Clone the source code and modify to your hearts content. You can do an OTA update by editing your `platformio.ini` and putting the IP address of your FumeBuddy
+````
+upload_protocol = espota
+upload_port = 192.168.1.60
+````
+
+Note that if you mess something up, you will very likely have to use serial updates to restore your FumeBuddy to a working state.
 
 
 

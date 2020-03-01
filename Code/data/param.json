@@ -16,5 +16,17 @@
     "type": "ACInput",
     "value": "",
     "label": "url toggle"
+  },
+  {
+    "name": "delay",
+    "type": "ACInput",
+    "value": "",
+    "label": "delay"
+  },
+  {
+    "name": "beeper",
+    "type": "ACCheckbox",
+    "value": "",
+    "label": "beeper"
   }
 ] 

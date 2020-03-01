@@ -25,7 +25,6 @@
 #define TOUCH_MINLENGTH 250
 #define OFFHOOK HIGH
 #define ONHOOK LOW
-#define ONHOOK_DELAY    5L // Delay before turning off in seconds
 
 enum class HookState
 {
@@ -46,6 +45,9 @@ AutoConnectConfig config;
 WiFiClient wifiClient;
 
 String fumebuddyOn, fumebuddyOff, fumebuddyToggle;
+unsigned int fumebuddyDelay;
+bool fumebuddyBeeper;
+
 
 HTTPClient http;
 
@@ -59,11 +61,15 @@ void startDevice()
   http.begin(fumebuddyOn);
   http.GET();
   http.end();
-  ledcWriteNote(0, NOTE_C, 5);
-  delay(125);
-  ledcWriteNote(0, NOTE_D, 5);
-  delay(125);
-  ledcWrite(0, 0);
+
+  if (fumebuddyBeeper)
+  {
+    ledcWriteNote(0, NOTE_C, 5);
+    delay(125);
+    ledcWriteNote(0, NOTE_D, 5);
+    delay(125);
+    ledcWrite(0, 0);
+  }
 }
 
 void stopDevice()
@@ -71,23 +77,31 @@ void stopDevice()
   http.begin(fumebuddyOff);
   http.GET();
   http.end();
-  ledcWriteNote(0, NOTE_D, 5);
-  delay(125);
-  ledcWriteNote(0, NOTE_C, 5);
-  delay(125);
-  ledcWrite(0, 0);
+
+  if (fumebuddyBeeper)
+  {
+    ledcWriteNote(0, NOTE_D, 5);
+    delay(125);
+    ledcWriteNote(0, NOTE_C, 5);
+    delay(125);
+    ledcWrite(0, 0);
+  }
 }
 
 void toggleDevice()
 {
+  Serial.println("Toggle time!");
   http.begin(fumebuddyToggle);
   http.GET();
   http.end();
-  ledcWriteNote(0, NOTE_C, 5);
-  delay(125);
-  ledcWriteNote(0, NOTE_C, 5);
-  delay(125);
-  ledcWrite(0, 0);
+  if (fumebuddyBeeper)
+  {
+    ledcWriteNote(0, NOTE_C, 5);
+    delay(125);
+    ledcWriteNote(0, NOTE_C, 5);
+    delay(125);
+    ledcWrite(0, 0);
+  }
 }
 
 void offHook()
@@ -108,7 +122,7 @@ void onHook()
   {
     digitalWrite(GPIO_RELAY_NO, HIGH);
     hookState = ONHOOK;
-    onHookMillis = millis() + (ONHOOK_DELAY * 1000L);
+    onHookMillis = millis() + (fumebuddyDelay * 1000L);
     Serial.println("Going on hook");
   }
 }
@@ -139,8 +153,15 @@ String saveParams(AutoConnectAux &aux, PageArgument &args)
   fumebuddyToggle = args.arg("urltoggle");
   fumebuddyToggle.trim();
 
+  String t_fumebuddyDelay = args.arg("delay");
+  t_fumebuddyDelay.trim();
+  fumebuddyDelay = t_fumebuddyDelay.toInt();
+
+  String t_fumebuddyBeeper = args.arg("beeper");
+  t_fumebuddyBeeper.trim();
+
   File param = SPIFFS.open(PARAM_FILE, "w");
-  portal.aux("/fumebuddy_setting")->saveElement(param, {"urlon", "urloff", "urltoggle"});
+  portal.aux("/fumebuddy_setting")->saveElement(param, {"urlon", "urloff", "urltoggle", "delay", "beeper"});
   param.close();
 
   // Echo back saved parameters to AutoConnectAux page.
@@ -148,6 +169,8 @@ String saveParams(AutoConnectAux &aux, PageArgument &args)
   echo.value += "url on: " + fumebuddyOn + "<br>";
   echo.value += "url off: " + fumebuddyOff + "<br>";
   echo.value += "url toggle: " + fumebuddyToggle + "<br>";
+  echo.value += "delay : " + String(fumebuddyDelay) + "<br>";
+  echo.value += "beeper: " + (fumebuddyBeeper == true ? String("true") : String("false")) + "<br>";
 
   return String("");
 }
@@ -226,15 +249,6 @@ void setup()
   ledcSetup(0, 1E5, 12);
   ledcAttachPin(GPIO_BUZZER, 0);
 
-  ledcWriteNote(0, NOTE_C, 5);
-  delay(125);
-  ledcWriteNote(0, NOTE_E, 5);
-  delay(125);
-  ledcWriteNote(0, NOTE_G, 5);
-  delay(125);
-  ledcWrite(0, 0);
-
-
   loadAux(AUX_SETTINGS);
   loadAux(AUX_SAVED);
   AutoConnectAux* setting = portal.aux(AUX_SETTINGS);
@@ -253,14 +267,25 @@ void setup()
   AutoConnectInput &e_on = fumebuddy_setting["urlon"].as<AutoConnectInput>();
   AutoConnectInput &e_off = fumebuddy_setting["urloff"].as<AutoConnectInput>();
   AutoConnectInput &e_toggle = fumebuddy_setting["urltoggle"].as<AutoConnectInput>();
+  AutoConnectInput &e_delay = fumebuddy_setting["delay"].as<AutoConnectInput>();
+  AutoConnectCheckbox &e_beeper = fumebuddy_setting["beeper"].as<AutoConnectCheckbox>();
 
   fumebuddyOn = e_on.value;
   fumebuddyOff = e_off.value;
   fumebuddyToggle = e_toggle.value;
+  fumebuddyDelay = e_delay.value.toInt();
+  if (e_beeper.checked)
+    fumebuddyBeeper = true;
+  else
+    fumebuddyBeeper = false;
 
   Serial.println("fumebuddyOn set to " + fumebuddyOn);
   Serial.println("fumebuddyOff set to " + fumebuddyOff);
   Serial.println("fumebuddyToggle set to " + fumebuddyToggle);
+  Serial.print("fumebuddyDelay set to ");
+  Serial.println(fumebuddyDelay);
+  Serial.print("fumebuddyBeeper set to ");
+  Serial.println(fumebuddyBeeper);
   Serial.println("hostname set to " + config.hostName);
 
   portal.on(AUX_SETTINGS, loadParams);
@@ -268,6 +293,17 @@ void setup()
   }
   else
     Serial.println("aux. load error");
+
+  if (fumebuddyBeeper)
+  {
+    ledcWriteNote(0, NOTE_C, 5);
+    delay(125);
+    ledcWriteNote(0, NOTE_E, 5);
+    delay(125);
+    ledcWriteNote(0, NOTE_G, 5);
+    delay(125);
+    ledcWrite(0, 0);
+  }
 
 
   Serial.print("WiFi\n");
@@ -351,8 +387,6 @@ void loop()
     triggerTouch = false;
     handledTouch = true;
   }
-
-  Serial.println(touchRead(TOUCH_INPUT));
 
   if (WiFi.status() == WL_CONNECTED)
   {

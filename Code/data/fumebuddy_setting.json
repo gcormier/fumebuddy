@@ -19,21 +19,35 @@
       "type": "ACInput",
       "value": "",
       "placeholder": "on URL",
-      "label": "on URL"
+      "label": "Power-On URL"
     },
 		{
       "name": "urloff",
       "type": "ACInput",
       "value": "",
       "placeholder": "off URL",
-      "label": "off URL"
+      "label": "Power-Off URL"
     },
     {
       "name": "urltoggle",
       "type": "ACInput",
       "value": "",
       "placeholder": "toggle URL3",
-      "label": "toggle URL3"
+      "label": "Power Toggle URL"
+    },
+    {
+      "name": "delay",
+      "type": "ACInput",
+      "value": "",
+      "placeholder": "delay in seconds",
+      "label": "Power-off delay"
+    },
+    {
+      "name": "beeper",
+      "type": "ACCheckbox",
+      "value": "",
+      "placeholder": "Beeper",
+      "label": "Beeper"
     },
     {
       "name": "save",

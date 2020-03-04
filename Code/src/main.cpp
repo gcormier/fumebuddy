@@ -274,6 +274,7 @@ void setup()
   fumebuddyOff = e_off.value;
   fumebuddyToggle = e_toggle.value;
   fumebuddyDelay = e_delay.value.toInt();
+  
   if (e_beeper.checked)
     fumebuddyBeeper = true;
   else

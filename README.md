@@ -6,7 +6,6 @@ FumeBuddy is an ESP32 replacement for the switch housing on the Hakko FX-950, FX
 ## Store
 If you are interested in a fully built version I sell them on my tindie store, <a href="https://www.tindie.com/products/gcormier/fumebuddy/">Greg's Tinker Town</a>
 
-
 ## Design Goals
 - Easily hacked
 - Replace stock housing

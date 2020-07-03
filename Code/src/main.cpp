@@ -25,7 +25,8 @@
 #define TOUCH_MINLENGTH 500
 #define OFFHOOK HIGH
 #define ONHOOK LOW
-#define DEBOUNCE_DELAY 150
+#define DEBOUNCE_DELAY 150L
+
 enum class HookState
 {
   STATE_OFFHOOK,      // Off hook
@@ -59,7 +60,7 @@ bool readHookState()
   return digitalRead(GPIO_SENSOR);
 }
 
-void startDevice()
+void startExternalDevice()
 {
   http.begin(fumebuddyOn);
   http.GET();
@@ -75,12 +76,8 @@ void startDevice()
   }
 }
 
-void stopDevice()
+void stopExternalDevice()
 {
-  // If we are touchOverride and we're enabled, don't turn off.
-  if (touchOverride && touchStatus)
-    return;
-
   http.begin(fumebuddyOff);
   http.GET();
   http.end();
@@ -95,7 +92,7 @@ void stopDevice()
   }
 }
 
-void toggleDevice()
+void toggleExternalDevice()
 {
   Serial.println("Toggle time!");
   http.begin(fumebuddyToggle);
@@ -111,15 +108,25 @@ void toggleDevice()
   }
 }
 
+void stopHeater()
+{
+  digitalWrite(GPIO_RELAY_NO, HIGH);
+}
+
+void startHeater()
+{
+    digitalWrite(GPIO_RELAY_NO, LOW);
+}
+
 void offHook()
 {
   if (hookState == ONHOOK)
   {
-    //digitalWrite(GPIO_RELAY_NO, LOW);
+    //startHeater();
     hookState = OFFHOOK;
     //startDevice();
     onHookMillis = 0;
-    offHookMillis = millis() + (fumebuddyDelay * 1000L);
+    offHookMillis = millis() + (DEBOUNCE_DELAY * 1L); //1L in case we forget it in the constant
     Serial.println("Going off hook");
   }
 }
@@ -128,10 +135,13 @@ void onHook()
 {
   if (hookState == OFFHOOK)
   {
-    digitalWrite(GPIO_RELAY_NO, HIGH);
+    stopHeater();
     hookState = ONHOOK;
-    onHookMillis = millis() + (fumebuddyDelay * 1000L);
-    offHookMillis = 0;
+    if (offHookMillis == 0) // If offHookMillis != 0 it means it was just a quick bounce.
+      onHookMillis = millis() + (fumebuddyDelay * 1000L);
+    else
+      offHookMillis = 0;
+    
     Serial.println("Going on hook");
   }
 }
@@ -169,8 +179,11 @@ String saveParams(AutoConnectAux &aux, PageArgument &args)
   String t_fumebuddyBeeper = args.arg("beeper");
   t_fumebuddyBeeper.trim();
 
+  String t_touchoverride = args.arg("touchoverride");
+  t_touchoverride.trim();
+
   File param = SPIFFS.open(PARAM_FILE, "w");
-  portal.aux("/fumebuddy_setting")->saveElement(param, {"urlon", "urloff", "urltoggle", "delay", "beeper"});
+  portal.aux("/fumebuddy_setting")->saveElement(param, {"urlon", "urloff", "urltoggle", "delay", "beeper", "touchoverride"});
   param.close();
 
   // Echo back saved parameters to AutoConnectAux page.
@@ -376,8 +389,8 @@ void setup()
   WiFiWebServer &webServer = portal.host();
   webServer.on("/", handleRoot);
 
-  hookState = OFFHOOK;
-  onHook();
+  hookState = ONHOOK;
+  stopHeater();
 }
 
 void loop()
@@ -392,21 +405,29 @@ void loop()
 
   if (hookState == ONHOOK && onHookMillis < currentMillis && onHookMillis > 0)
   {
-    stopDevice();
+      // If we are touchOverride and we're enabled, don't turn off.
+    if (touchOverride == false && touchStatus == false)
+      stopExternalDevice();
+    else if (touchOverride == false && touchStatus == true)
+      stopExternalDevice();
+    else if (touchOverride == true && touchStatus == false)
+      stopExternalDevice();
+      
     onHookMillis = 0;
     offHookMillis = 0;
   }
-  else if (hookState == OFFHOOK && offHookMillis < currentMillis ** offHookMillis > 0) // Off hook has surpassed debounce delay, actually do stuff
+  else if (hookState == OFFHOOK && offHookMillis < currentMillis && offHookMillis > 0) // Off hook has surpassed debounce delay, actually do stuff
   {
-    digitalWrite(GPIO_RELAY_NO, LOW);
-    startDevice();
+    startHeater();
+    startExternalDevice();
+    offHookMillis = 0;
   }
 
   readTouch();
 
   if (triggerTouch)
   {
-    toggleDevice();
+    toggleExternalDevice();
     triggerTouch = false;
     handledTouch = true;
     touchStatus = !touchStatus;

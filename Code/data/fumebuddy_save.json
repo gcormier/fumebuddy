@@ -6,7 +6,7 @@
     {
       "name": "caption",
       "type": "ACText",
-      "value": "<h4>Parameters saved. <em>Please power-cycle your device</em></h4>",
+      "value": "<h4>Parameters saved. <em><strong>Please power-cycle your device</strong></em></h4>",
       "style": "text-align:center;color:#2f4f4f;padding:10px;"
     },
     {

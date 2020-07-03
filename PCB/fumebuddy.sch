@@ -1,5 +1,5 @@
 EESchema Schematic File Version 4
-EELAYER 29 0
+EELAYER 30 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -311,8 +311,6 @@ NoConn ~ 6450 3150
 NoConn ~ 6450 3050
 NoConn ~ 6450 2850
 NoConn ~ 6450 2050
-Wire Wire Line
-	6550 2750 6450 2750
 Text Label 6550 1750 0    50   ~ 0
 TXD
 Text Label 6550 1950 0    50   ~ 0
@@ -323,7 +321,6 @@ Wire Wire Line
 	6550 1950 6450 1950
 NoConn ~ 6450 2650
 NoConn ~ 6450 2550
-NoConn ~ 6450 2350
 Wire Wire Line
 	6800 1300 6800 1650
 $Comp
@@ -493,13 +490,12 @@ Wire Wire Line
 	2600 1450 2500 1450
 Wire Wire Line
 	2300 1450 2000 1450
-Text Label 6550 2750 0    39   ~ 0
+Text Label 6550 1850 0    39   ~ 0
 SENSOR
 Text Label 6550 2250 0    39   ~ 0
 RELAY_NO
 Text Label 6550 2150 0    39   ~ 0
 RELAY_NC
-NoConn ~ 6450 1850
 Text Label 6550 2450 0    39   ~ 0
 RELAY_AUX
 Wire Wire Line
@@ -684,4 +680,8 @@ Wire Notes Line
 	1350 4450 2250 4450
 Text Notes 1650 4450 0    50   ~ 0
 Power
+NoConn ~ 6450 2750
+Wire Wire Line
+	6550 1850 6450 1850
+NoConn ~ 6450 2350
 $EndSCHEMATC

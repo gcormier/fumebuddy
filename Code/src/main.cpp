@@ -7,36 +7,37 @@
 #include <AutoConnect.h>
 #include <ArduinoOTA.h>
 
-#define HOST_NAME "fumebuddy" + GET_CHIPID()
+#define HOST_NAME     "fumebuddy" + GET_CHIPID()
 
 // AutoConnect stuff
-#define PARAM_FILE "/param.json"
-#define AUX_SETTINGS "/fumebuddy_setting"
-#define AUX_SAVED "/fumebuddy_save"
+#define PARAM_FILE    "/param.json"
+#define AUX_SETTINGS  "/fumebuddy_setting"
+#define AUX_SAVED     "/fumebuddy_save"
 
 // Fumebuddy Definitions
-#define GPIO_SENSOR 17
-#define GPIO_RELAY_AUX 14
-#define GPIO_RELAY_NC 5
-#define GPIO_RELAY_NO 12
-#define GPIO_BUZZER 26
-#define TOUCH_INPUT T7
-#define TOUCH_THRESHOLD 50
-#define TOUCH_MINLENGTH 500
+#define GPIO_SENSOR         17
+#define GPIO_RELAY_AUX      14
+#define GPIO_RELAY_NC       5
+#define GPIO_RELAY_NO       12
+#define GPIO_BUZZER         26
+#define TOUCH_INPUT         T2
+#define TOUCH_THRESHOLD     50
+#define TOUCH_MINLENGTH     500
 #define OFFHOOK HIGH
 #define ONHOOK LOW
-#define DEBOUNCE_DELAY 150L
+#define MINIMUM_STATE_TIME  200L // Debounce
 
 enum class HookState
 {
   STATE_OFFHOOK,      // Off hook
-  STATE_ONHOOK_READY, // Ready for On Hook
+  STATE_TRANSITION_OFF, // Going off
+  STATE_TRANSITION_ON, // Going on
   STATE_ONHOOK        // On hook
 };
-bool hookState = ONHOOK;
+HookState hookState = HookState::STATE_ONHOOK;
 uint32_t currentMillis = 0;
+uint32_t currentStateCounter;
 uint32_t onHookMillis = 0;
-uint32_t offHookMillis = 0;
 HookState currentState;
 bool triggerTouch = false, handledTouch = false;
 
@@ -116,34 +117,6 @@ void stopHeater()
 void startHeater()
 {
     digitalWrite(GPIO_RELAY_NO, LOW);
-}
-
-void offHook()
-{
-  if (hookState == ONHOOK)
-  {
-    //startHeater();
-    hookState = OFFHOOK;
-    //startDevice();
-    onHookMillis = 0;
-    offHookMillis = millis() + (DEBOUNCE_DELAY * 1L); //1L in case we forget it in the constant
-    Serial.println("Going off hook");
-  }
-}
-
-void onHook()
-{
-  if (hookState == OFFHOOK)
-  {
-    stopHeater();
-    hookState = ONHOOK;
-    if (offHookMillis == 0) // If offHookMillis != 0 it means it was just a quick bounce.
-      onHookMillis = millis() + (fumebuddyDelay * 1000L);
-    else
-      offHookMillis = 0;
-    
-    Serial.println("Going on hook");
-  }
 }
 
 String loadParams(AutoConnectAux &aux, PageArgument &args)
@@ -252,7 +225,7 @@ void readTouch()
 
 void setup()
 {
-  delay(250);
+  delay(125);
   Serial.begin(115200);
   Serial.println();
   SPIFFS.begin();
@@ -264,9 +237,10 @@ void setup()
   pinMode(GPIO_RELAY_AUX, OUTPUT);
 
   // This is a bodge for GPIO25 on rev 3 versions of the board, so we don't affect the actual touch input of GPIO27.
-  pinMode(25, INPUT);
+  //pinMode(25, INPUT);
 
-  digitalWrite(GPIO_RELAY_NC, HIGH);
+  stopHeater();
+  
   currentMillis = millis();
 
   ledcSetup(0, 1E5, 12);
@@ -389,8 +363,10 @@ void setup()
   WiFiWebServer &webServer = portal.host();
   webServer.on("/", handleRoot);
 
-  hookState = ONHOOK;
   stopHeater();
+  touchStatus = false;
+  
+  currentStateCounter = millis();
 }
 
 void loop()
@@ -398,39 +374,71 @@ void loop()
   currentMillis = millis();
   bool currentHookStatus = readHookState();
 
-  if (currentHookStatus == OFFHOOK)
-    offHook();
-  else if (currentHookStatus == ONHOOK)
-    onHook();
+  // Check where we WANT to be.
+  if (currentHookStatus == OFFHOOK && hookState == HookState::STATE_ONHOOK)
+  {
+    hookState = HookState::STATE_TRANSITION_OFF;
+    currentStateCounter = currentMillis;
+  }
+  else if (currentHookStatus == ONHOOK && hookState == HookState::STATE_OFFHOOK)
+  {
+    hookState = HookState::STATE_TRANSITION_ON;
+    currentStateCounter = currentMillis;
+  }
+  else if (currentHookStatus == ONHOOK && hookState == HookState::STATE_TRANSITION_OFF) // Went back onhook, abort transition
+  {
+    hookState = HookState::STATE_ONHOOK;
+  }
+  else if (currentHookStatus == OFFHOOK && hookState == HookState::STATE_TRANSITION_ON) // Went back offhook, abort transition
+  {
+    hookState = HookState::STATE_OFFHOOK;
+  }
+  
+  // Now, based on where we want to go, do it
 
-  if (hookState == ONHOOK && onHookMillis < currentMillis && onHookMillis > 0)
+  // Going off and debounce time surpassed
+  if (hookState == HookState::STATE_TRANSITION_OFF && (currentMillis - currentStateCounter > MINIMUM_STATE_TIME))
+  {
+    hookState = HookState::STATE_OFFHOOK;
+    onHookMillis = 0;
+    startHeater();
+    if ((touchOverride == true && touchStatus == false) || touchOverride == false)  // Only enable if it's not already forced ON
+      startExternalDevice();
+  }
+  // Going on and debounce time  surpassed
+  else if (hookState == HookState::STATE_TRANSITION_ON && (currentMillis - currentStateCounter > MINIMUM_STATE_TIME))
+  {
+    hookState = HookState::STATE_ONHOOK;
+    stopHeater();
+    onHookMillis = millis() + (fumebuddyDelay * 1000L);
+  }
+
+  if (hookState == HookState::STATE_ONHOOK && onHookMillis < currentMillis && onHookMillis > 0)
   {
       // If we are touchOverride and we're enabled, don't turn off.
-    if (touchOverride == false && touchStatus == false)
+    if (touchOverride == false)
+    {
       stopExternalDevice();
-    else if (touchOverride == false && touchStatus == true)
-      stopExternalDevice();
+      touchStatus = false;
+    }
     else if (touchOverride == true && touchStatus == false)
       stopExternalDevice();
       
     onHookMillis = 0;
-    offHookMillis = 0;
-  }
-  else if (hookState == OFFHOOK && offHookMillis < currentMillis && offHookMillis > 0) // Off hook has surpassed debounce delay, actually do stuff
-  {
-    startHeater();
-    startExternalDevice();
-    offHookMillis = 0;
   }
 
   readTouch();
 
   if (triggerTouch)
   {
-    toggleExternalDevice();
     triggerTouch = false;
     handledTouch = true;
     touchStatus = !touchStatus;
+
+    if (touchStatus)
+      startExternalDevice();
+    else if (!touchStatus)
+      stopExternalDevice();
   }
 
   if (WiFi.status() == WL_CONNECTED)

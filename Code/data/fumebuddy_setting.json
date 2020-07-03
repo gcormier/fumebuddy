@@ -38,21 +38,21 @@
     {
       "name": "delay",
       "type": "ACInput",
-      "value": "",
+      "value": "3",
       "placeholder": "delay in seconds",
       "label": "Power-off delay"
     },
     {
       "name": "touchoverride",
       "type": "ACCheckbox",
-      "value": "",
+      "value": "true",
       "placeholder": "touchoverride",
       "label": "Touch Override - ignore all onhook/offhook events when manually activated"
     },
     {
       "name": "beeper",
       "type": "ACCheckbox",
-      "value": "",
+      "value": "true",
       "placeholder": "Beeper",
       "label": "Beeper"
     },

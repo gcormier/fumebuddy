@@ -3,6 +3,10 @@
 # FumeBuddy
 FumeBuddy is an ESP32 replacement for the switch housing on the Hakko FX-950, FX-951 and FX-952. Out of the box, it was designed to toggle a fume extractor via a smart switch flashed with [Tasmota](https://tasmota.github.io/docs/#/). It is powered via USB, which allows it to be powered by a battery pack if desired.
 
+## Store
+If you are interested in a fully built version I sell them on my tindie store, <a href="https://www.tindie.com/products/gcormier/fumebuddy/">Greg's Tinker Town</a>
+
+
 ## Design Goals
 - Easily hacked
 - Replace stock housing

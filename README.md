@@ -55,6 +55,7 @@ http://<ip>/cm?cmnd=Power%20off
 - If FumeBuddy is NOT powered, the iron will work as it did before with sleep function
 - If FumeBuddy is powered via the 5V USB port, it will work based on what is programmed. By default, it will turn the plug ON when the iron is lifted. It will turn the plug OFF 5 seconds after the iron is put back
 - Manual on/off can be by touching the capacitive wire on top of the housing for 1 second
+- Touch override (if enabled) means that when you manually enable the external device using the touch sensor, the handset will have no effect on the external device.
 
 ## Pricing
 The BOM cost alone for the product is around 23USD, which is rather expensive. I order **genuine** parts from 1st party distributors in Canada, which in this case includes Omron switches, solid state relays and the ESP32. I did not go cheap on this as owners of Hakko's are likely looking for quality components throughout. The rest includes my labor costs to assembly, flash and test the unit. As it is open sourced, you are welcome to build your own! You can cheap out on some components if you'd like. Knockoff relays and omitting the audio buzzer will save you a few dollars.

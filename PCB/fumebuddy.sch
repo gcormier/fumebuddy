@@ -279,7 +279,6 @@ NoConn ~ 6450 2950
 NoConn ~ 6450 3250
 NoConn ~ 6450 3150
 NoConn ~ 6450 3050
-NoConn ~ 6450 2850
 NoConn ~ 6450 2050
 Text Label 6550 1750 0    50   ~ 0
 TXD
@@ -458,16 +457,12 @@ Wire Wire Line
 	2600 1450 2500 1450
 Wire Wire Line
 	2300 1450 2000 1450
-Text Label 6550 1850 0    39   ~ 0
+Text Label 6550 2850 0    50   ~ 0
 SENSOR
-Text Label 6550 2250 0    39   ~ 0
+Text Label 6550 2250 0    50   ~ 0
 RELAY_NO
-Text Label 6550 2150 0    39   ~ 0
+Text Label 6550 2150 0    50   ~ 0
 RELAY_NC
-Text Label 6550 2450 0    39   ~ 0
-RELAY_AUX
-Wire Wire Line
-	6450 2450 6550 2450
 $Comp
 L Switch:SW_SPDT SW1
 U 1 1 5C657B85
@@ -526,36 +521,6 @@ F 3 "" H 7300 1750 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	7300 1750 7300 1650
-$Comp
-L Switch:SW_SPST SW4
-U 1 1 5C7F8F4E
-P 7100 2950
-F 0 "SW4" H 7100 3185 50  0000 C CNN
-F 1 "SW_OPT" H 7100 3094 50  0000 C CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical" H 7100 2950 50  0001 C CNN
-F 3 "~" H 7100 2950 50  0001 C CNN
-	1    7100 2950
-	1    0    0    -1  
-$EndComp
-$Comp
-L power:GND #PWR?
-U 1 1 5C7F8FCC
-P 7300 3050
-AR Path="/5C5CDDE8/5C7F8FCC" Ref="#PWR?"  Part="1" 
-AR Path="/5C7F8FCC" Ref="#PWR07"  Part="1" 
-F 0 "#PWR07" H 7300 2800 50  0001 C CNN
-F 1 "GND" H 7305 2877 50  0000 C CNN
-F 2 "" H 7300 3050 50  0001 C CNN
-F 3 "" H 7300 3050 50  0001 C CNN
-	1    7300 3050
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	7300 3050 7300 2950
-Wire Wire Line
-	6450 3350 6900 3350
-Wire Wire Line
-	6900 3350 6900 2950
 $Comp
 L Device:Buzzer BZ1
 U 1 1 5C81CA32
@@ -674,4 +639,25 @@ Wire Notes Line
 	4800 4450 4800 5550
 Wire Notes Line
 	3850 4450 3850 5550
+$Comp
+L Connector_Generic:Conn_01x01 J4
+U 1 1 5EFFD667
+P 7650 2450
+F 0 "J4" H 7730 2492 50  0000 L CNN
+F 1 "TOUCH" H 7730 2401 50  0000 L CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical" H 7650 2450 50  0001 C CNN
+F 3 "~" H 7650 2450 50  0001 C CNN
+	1    7650 2450
+	1    0    0    -1  
+$EndComp
+Text Label 6550 1850 0    50   ~ 0
+TOUCH
+Text Label 7450 2450 2    39   ~ 0
+TOUCH
+Wire Wire Line
+	6450 2850 6550 2850
+Text Label 4500 4950 0    50   ~ 0
+3V3
+NoConn ~ 6450 3350
+NoConn ~ 6450 2450
 $EndSCHEMATC

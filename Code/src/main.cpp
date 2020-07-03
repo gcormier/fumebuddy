@@ -10,22 +10,22 @@
 #define HOST_NAME "fumebuddy" + GET_CHIPID()
 
 // AutoConnect stuff
-#define PARAM_FILE    "/param.json"
-#define AUX_SETTINGS  "/fumebuddy_setting"
-#define AUX_SAVED     "/fumebuddy_save"
+#define PARAM_FILE "/param.json"
+#define AUX_SETTINGS "/fumebuddy_setting"
+#define AUX_SAVED "/fumebuddy_save"
 
 // Fumebuddy Definitions
-#define GPIO_SENSOR     17
-#define GPIO_RELAY_AUX  14
-#define GPIO_RELAY_NC   5
-#define GPIO_RELAY_NO   12
-#define GPIO_BUZZER     26
-#define TOUCH_INPUT     T7
+#define GPIO_SENSOR 17
+#define GPIO_RELAY_AUX 14
+#define GPIO_RELAY_NC 5
+#define GPIO_RELAY_NO 12
+#define GPIO_BUZZER 26
+#define TOUCH_INPUT T7
 #define TOUCH_THRESHOLD 50
-#define TOUCH_MINLENGTH 250
+#define TOUCH_MINLENGTH 500
 #define OFFHOOK HIGH
 #define ONHOOK LOW
-
+#define DEBOUNCE_DELAY 150
 enum class HookState
 {
   STATE_OFFHOOK,      // Off hook
@@ -35,6 +35,7 @@ enum class HookState
 bool hookState = ONHOOK;
 uint32_t currentMillis = 0;
 uint32_t onHookMillis = 0;
+uint32_t offHookMillis = 0;
 HookState currentState;
 bool triggerTouch = false, handledTouch = false;
 
@@ -44,10 +45,12 @@ AutoConnect portal;
 AutoConnectConfig config;
 WiFiClient wifiClient;
 
-String fumebuddyOn, fumebuddyOff, fumebuddyToggle;
+String fumebuddyOn, fumebuddyOff, fumebuddyToggle, fumebuddyTouchOverride;
 unsigned int fumebuddyDelay;
 bool fumebuddyBeeper;
+bool touchOverride;
 
+bool touchStatus = false;
 
 HTTPClient http;
 
@@ -74,6 +77,10 @@ void startDevice()
 
 void stopDevice()
 {
+  // If we are touchOverride and we're enabled, don't turn off.
+  if (touchOverride && touchStatus)
+    return;
+
   http.begin(fumebuddyOff);
   http.GET();
   http.end();
@@ -108,10 +115,11 @@ void offHook()
 {
   if (hookState == ONHOOK)
   {
-    digitalWrite(GPIO_RELAY_NO, LOW);
+    //digitalWrite(GPIO_RELAY_NO, LOW);
     hookState = OFFHOOK;
-    startDevice();
+    //startDevice();
     onHookMillis = 0;
+    offHookMillis = millis() + (fumebuddyDelay * 1000L);
     Serial.println("Going off hook");
   }
 }
@@ -123,6 +131,7 @@ void onHook()
     digitalWrite(GPIO_RELAY_NO, HIGH);
     hookState = ONHOOK;
     onHookMillis = millis() + (fumebuddyDelay * 1000L);
+    offHookMillis = 0;
     Serial.println("Going on hook");
   }
 }
@@ -171,6 +180,7 @@ String saveParams(AutoConnectAux &aux, PageArgument &args)
   echo.value += "url toggle: " + fumebuddyToggle + "<br>";
   echo.value += "delay : " + String(fumebuddyDelay) + "<br>";
   echo.value += "beeper: " + (fumebuddyBeeper == true ? String("true") : String("false")) + "<br>";
+  echo.value += "touchoverride: " + (touchOverride == true ? String("true") : String("false")) + "<br>";
 
   return String("");
 }
@@ -239,7 +249,7 @@ void setup()
   pinMode(GPIO_RELAY_NC, OUTPUT);
   pinMode(GPIO_SENSOR, INPUT_PULLUP);
   pinMode(GPIO_RELAY_AUX, OUTPUT);
-    
+
   // This is a bodge for GPIO25 on rev 3 versions of the board, so we don't affect the actual touch input of GPIO27.
   pinMode(25, INPUT);
 
@@ -251,7 +261,7 @@ void setup()
 
   loadAux(AUX_SETTINGS);
   loadAux(AUX_SAVED);
-  AutoConnectAux* setting = portal.aux(AUX_SETTINGS);
+  AutoConnectAux *setting = portal.aux(AUX_SETTINGS);
 
   // Setup AutoConfig
   config.bootUri = AC_ONBOOTURI_HOME;
@@ -260,37 +270,44 @@ void setup()
   portal.config(config);
 
   PageArgument args;
-  AutoConnectAux& fumebuddy_setting = *setting;
+  AutoConnectAux &fumebuddy_setting = *setting;
   if (setting)
   {
-  loadParams(fumebuddy_setting, args);
-  AutoConnectInput &e_on = fumebuddy_setting["urlon"].as<AutoConnectInput>();
-  AutoConnectInput &e_off = fumebuddy_setting["urloff"].as<AutoConnectInput>();
-  AutoConnectInput &e_toggle = fumebuddy_setting["urltoggle"].as<AutoConnectInput>();
-  AutoConnectInput &e_delay = fumebuddy_setting["delay"].as<AutoConnectInput>();
-  AutoConnectCheckbox &e_beeper = fumebuddy_setting["beeper"].as<AutoConnectCheckbox>();
+    loadParams(fumebuddy_setting, args);
+    AutoConnectInput &e_on = fumebuddy_setting["urlon"].as<AutoConnectInput>();
+    AutoConnectInput &e_off = fumebuddy_setting["urloff"].as<AutoConnectInput>();
+    AutoConnectInput &e_toggle = fumebuddy_setting["urltoggle"].as<AutoConnectInput>();
+    AutoConnectInput &e_delay = fumebuddy_setting["delay"].as<AutoConnectInput>();
+    AutoConnectCheckbox &e_beeper = fumebuddy_setting["beeper"].as<AutoConnectCheckbox>();
+    AutoConnectCheckbox &e_touch = fumebuddy_setting["touchoverride"].as<AutoConnectCheckbox>();
 
-  fumebuddyOn = e_on.value;
-  fumebuddyOff = e_off.value;
-  fumebuddyToggle = e_toggle.value;
-  fumebuddyDelay = e_delay.value.toInt();
-  
-  if (e_beeper.checked)
-    fumebuddyBeeper = true;
-  else
-    fumebuddyBeeper = false;
+    fumebuddyOn = e_on.value;
+    fumebuddyOff = e_off.value;
+    fumebuddyToggle = e_toggle.value;
+    fumebuddyDelay = e_delay.value.toInt();
 
-  Serial.println("fumebuddyOn set to " + fumebuddyOn);
-  Serial.println("fumebuddyOff set to " + fumebuddyOff);
-  Serial.println("fumebuddyToggle set to " + fumebuddyToggle);
-  Serial.print("fumebuddyDelay set to ");
-  Serial.println(fumebuddyDelay);
-  Serial.print("fumebuddyBeeper set to ");
-  Serial.println(fumebuddyBeeper);
-  Serial.println("hostname set to " + config.hostName);
+    if (e_beeper.checked)
+      fumebuddyBeeper = true;
+    else
+      fumebuddyBeeper = false;
 
-  portal.on(AUX_SETTINGS, loadParams);
-  portal.on(AUX_SAVED, saveParams);
+    if (e_touch.checked)
+      touchOverride = true;
+    else
+      touchOverride = false;
+
+    Serial.println("fumebuddyOn set to " + fumebuddyOn);
+    Serial.println("fumebuddyOff set to " + fumebuddyOff);
+    Serial.println("fumebuddyToggle set to " + fumebuddyToggle);
+    Serial.print("fumebuddyDelay set to ");
+    Serial.println(fumebuddyDelay);
+    Serial.print("fumebuddyBeeper set to ");
+    Serial.println(fumebuddyBeeper);
+    Serial.println(touchOverride);
+    Serial.println("hostname set to " + config.hostName);
+
+    portal.on(AUX_SETTINGS, loadParams);
+    portal.on(AUX_SAVED, saveParams);
   }
   else
     Serial.println("aux. load error");
@@ -305,7 +322,6 @@ void setup()
     delay(125);
     ledcWrite(0, 0);
   }
-
 
   Serial.print("WiFi\n");
   if (portal.begin())
@@ -355,11 +371,11 @@ void setup()
           Serial.println("End Failed");
       });
 
-    ArduinoOTA.begin();
+  ArduinoOTA.begin();
 
   WiFiWebServer &webServer = portal.host();
   webServer.on("/", handleRoot);
-  
+
   hookState = OFFHOOK;
   onHook();
 }
@@ -378,6 +394,12 @@ void loop()
   {
     stopDevice();
     onHookMillis = 0;
+    offHookMillis = 0;
+  }
+  else if (hookState == OFFHOOK && offHookMillis < currentMillis ** offHookMillis > 0) // Off hook has surpassed debounce delay, actually do stuff
+  {
+    digitalWrite(GPIO_RELAY_NO, LOW);
+    startDevice();
   }
 
   readTouch();
@@ -387,6 +409,7 @@ void loop()
     toggleDevice();
     triggerTouch = false;
     handledTouch = true;
+    touchStatus = !touchStatus;
   }
 
   if (WiFi.status() == WL_CONNECTED)

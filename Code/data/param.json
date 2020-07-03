@@ -28,5 +28,11 @@
     "type": "ACCheckbox",
     "value": "",
     "label": "beeper"
+  },
+  {
+    "name": "touchoverride",
+    "type": "ACCheckbox",
+    "value": "",
+    "label": "touchoverride"
   }
 ] 

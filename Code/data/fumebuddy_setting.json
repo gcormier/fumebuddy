@@ -43,6 +43,13 @@
       "label": "Power-off delay"
     },
     {
+      "name": "touchoverride",
+      "type": "ACCheckbox",
+      "value": "",
+      "placeholder": "touchoverride",
+      "label": "Touch Override - ignore all onhook/offhook events if manually activated"
+    },
+    {
       "name": "beeper",
       "type": "ACCheckbox",
       "value": "",

@@ -20,19 +20,19 @@
   {
     "name": "delay",
     "type": "ACInput",
-    "value": "",
+    "value": "5",
     "label": "delay"
   },
   {
     "name": "beeper",
     "type": "ACCheckbox",
-    "value": "",
+    "checked":"true",
     "label": "beeper"
   },
   {
     "name": "touchoverride",
     "type": "ACCheckbox",
-    "value": "",
+    "checked": "true",
     "label": "touchoverride"
   }
 ] 

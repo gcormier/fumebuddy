@@ -45,14 +45,12 @@
     {
       "name": "touchoverride",
       "type": "ACCheckbox",
-      "value": "true",
       "placeholder": "touchoverride",
       "label": "Touch Override - ignore all onhook/offhook events when manually activated"
     },
     {
       "name": "beeper",
       "type": "ACCheckbox",
-      "value": "true",
       "placeholder": "Beeper",
       "label": "Beeper"
     },

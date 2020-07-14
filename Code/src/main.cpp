@@ -251,8 +251,10 @@ void setup()
   AutoConnectAux *setting = portal.aux(AUX_SETTINGS);
 
   // Setup AutoConfig
-  config.bootUri = AC_ONBOOTURI_HOME;
-  config.homeUri = "/";
+  //config.bootUri = AC_ONBOOTURI_HOME;
+  //config.homeUri = "/";
+  config.apid = "fumebuddy_portal";
+  config.psk = "fumebuddy";
   config.hostName = String("fumebuddy") + GET_CHIPID();
   portal.config(config);
 

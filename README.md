@@ -37,7 +37,7 @@ http://<ip>/cm?cmnd=Power%20off
 
 ### FumeBuddy
 - FumeBuddy is pre-flashed with software which uses [Autoconnect](https://hieromon.github.io/AutoConnect/index.html)
-- After powering up FumeBuddy, wait 30-60 seconds. You should find a new WiFi SSID (esp32ap) to which you can connect (password 12345678)
+- After powering up FumeBuddy, wait 30-60 seconds. You should find a new WiFi SSID (fumebuddy_portal) to which you can connect (password **fumebuddy**)
 
 <img src="https://github.com/gcormier/fumebuddy/blob/master/docs/esp32ap.png?raw=true" height="200px" />
 

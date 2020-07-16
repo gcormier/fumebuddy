@@ -496,32 +496,6 @@ Wire Notes Line
 Wire Notes Line
 	3850 5550 4800 5550
 $Comp
-L Switch:SW_SPST SW3
-U 1 1 5C7F48D2
-P 7100 1650
-F 0 "SW3" H 7100 1885 50  0000 C CNN
-F 1 "FLASH" H 7100 1794 50  0000 C CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical" H 7100 1650 50  0001 C CNN
-F 3 "~" H 7100 1650 50  0001 C CNN
-	1    7100 1650
-	1    0    0    -1  
-$EndComp
-$Comp
-L power:GND #PWR?
-U 1 1 5C7F4946
-P 7300 1750
-AR Path="/5C5CDDE8/5C7F4946" Ref="#PWR?"  Part="1" 
-AR Path="/5C7F4946" Ref="#PWR05"  Part="1" 
-F 0 "#PWR05" H 7300 1500 50  0001 C CNN
-F 1 "GND" H 7305 1577 50  0000 C CNN
-F 2 "" H 7300 1750 50  0001 C CNN
-F 3 "" H 7300 1750 50  0001 C CNN
-	1    7300 1750
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	7300 1750 7300 1650
-$Comp
 L Device:Buzzer BZ1
 U 1 1 5C81CA32
 P 7050 3550
@@ -584,7 +558,7 @@ U 1 1 5F0221F2
 P 4300 5050
 F 0 "J3" H 4368 4525 50  0000 C CNN
 F 1 "esp32buddy" H 4368 4616 50  0000 C CNN
-F 2 "!Greg:esp32buddy-2.54mm" H 4300 5050 50  0001 C CNN
+F 2 "!Greg:PinHeader_1x06_P2.54mm_Vertical" H 4300 5050 50  0001 C CNN
 F 3 "~" H 4300 5050 50  0001 C CNN
 	1    4300 5050
 	-1   0    0    1   
@@ -608,7 +582,6 @@ Text Label 6550 1600 0    50   ~ 0
 GPIO0
 Wire Wire Line
 	6550 1600 6550 1650
-Connection ~ 6550 1650
 Text Label 4500 4850 0    50   ~ 0
 EN
 Text Label 5050 1600 0    50   ~ 0
@@ -633,8 +606,6 @@ Wire Wire Line
 Connection ~ 5050 1650
 Wire Wire Line
 	5050 1650 5250 1650
-Wire Wire Line
-	6550 1650 6900 1650
 Wire Notes Line
 	4800 4450 4800 5550
 Wire Notes Line

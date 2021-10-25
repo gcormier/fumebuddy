@@ -15,7 +15,7 @@
 #define AUX_SAVED     "/fumebuddy_save"
 
 // Fumebuddy Definitions
-#define GPIO_SENSOR         17
+#define GPIO_SENSOR         18
 #define GPIO_RELAY_AUX      14
 #define GPIO_RELAY_NC       5
 #define GPIO_RELAY_NO       12

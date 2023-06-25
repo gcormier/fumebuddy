@@ -1,0 +1,82 @@
+esphome:
+  name: fumebuddy
+  platform: ESP32
+  board: esp32dev
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "FumebuddyFallback"
+    password: "fumebuddy"
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+esp32_touch:
+
+
+binary_sensor:
+  - platform: gpio 
+    name: "HandsetSensor"
+    pin:
+      number: 18
+      inverted: True
+      mode: INPUT_PULLUP
+    filters:
+    - delayed_on: 200ms
+    - delayed_off: 2000ms
+    on_press:
+      then:
+        - http_request.get:
+          url: http://192.168.1.40/cm?cmnd=Power%20On
+        - rtttl.play:
+            rtttl: 'd=4,o=5,b=100:c6,d6,e6'
+        - switch.turn_off: relay_no
+    on_release:
+      then:
+        - http_request.get:
+          url: http://192.168.1.40/cm?cmnd=Power%20Off
+        - rtttl.play:
+            rtttl: 'd=4,o=5,b=100:e6,d6,c6'
+        - switch.turn_on: relay_no
+
+  
+  - platform: esp32_touch
+    name: "ESP32 Touch Pad GPIO2"
+    pin: GPIO2
+    threshold: 50
+    filters:
+    - delayed_on: 500ms
+    - delayed_off: 500ms
+    on_state:
+      then:
+        - http_request.get:
+          url: http://192.168.1.40/cm?cmnd=Power%20TOGGLE
+        - rtttl.play:
+            rtttl: 'd=4,o=5,b=100:c6,d6,e6,d6,c6'
+
+switch:
+  - platform: gpio
+    name: "relay_no"
+    pin: GPIO12
+    id: relay_no
+  
+output:
+  - platform: ledc
+    pin: GPIO26
+    id: rtttl_out
+
+rtttl:
+  output: rtttl_out
+
+
+

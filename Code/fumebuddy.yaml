@@ -1,0 +1,116 @@
+esphome:
+  name: fumebuddy
+  platform: ESP32
+  board: esp32dev
+
+  on_boot:
+    then:
+    - rtttl.play: 'scale_up:d=32,o=5,b=100:c,d,e,c,d,e,c,d,e'
+
+globals:
+  - id: manual_override
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "FumebuddyFallback"
+    password: "fumebuddy"
+
+captive_portal:
+
+# Enable logging
+#logger:
+  #level: VERBOSE
+
+
+ota:
+esp32_touch:
+  # Use setup_mode for the first time when you want to tune the values of your capacitive sensor
+  # Make sure you have logger enabled
+  #setup_mode: true
+
+http_request:
+api:
+
+binary_sensor:
+  - platform: gpio 
+    name: "HandsetSensor"
+    pin:
+      number: GPIO18
+      inverted: False
+      mode: INPUT_PULLUP
+    filters:
+    - delayed_on: 100ms
+    - delayed_off: 2000ms
+    on_press:
+    - switch.turn_off: relay_no
+    - if:
+        condition:
+          lambda: |-
+            return id(manual_override) == false;
+        then:
+          - http_request.get:
+              url: http://192.168.1.40/cm?cmnd=Power%20On
+          - rtttl.play:
+              rtttl: 'scale_up:d=32,o=5,b=100:c,d,e,f,g'
+
+    on_release:
+    - switch.turn_on: relay_no
+    - if:
+        condition:
+          lambda: |-
+            return id(manual_override) == false;
+        then:
+        - http_request.get:
+            url: http://192.168.1.40/cm?cmnd=Power%20Off
+        - rtttl.play:
+            rtttl: 'scale_down:d=32,o=5,b=100:g,f,e,d,c'
+
+
+  
+  - platform: esp32_touch
+    name: "ESP32 Touch Pad GPIO2"
+    pin: GPIO2
+    threshold: 250
+    filters:
+    - delayed_on: 500ms
+    - delayed_off: 500ms
+    on_press:
+      if:
+        condition:
+          lambda: |-
+            return id(manual_override) == false;
+        then:
+          - http_request.get:
+              url: http://192.168.1.40/cm?cmnd=Power%20On
+          - rtttl.play:
+              rtttl: 'scale_up:d=32,o=5,b=100:c,d,e,f,g'
+          - lambda: |-
+              id(manual_override) = true;
+        else:
+          - http_request.get:
+              url: http://192.168.1.40/cm?cmnd=Power%20Off
+          - rtttl.play:
+              rtttl: 'scale_down:d=32,o=5,b=100:g,f,e,d,c'
+          - lambda: |-
+              id(manual_override) = false;
+
+switch:
+  - platform: gpio
+    name: "relay_no"
+    pin: GPIO12
+    id: relay_no
+  
+output:
+  - platform: ledc
+    pin: GPIO26
+    id: rtttl_out
+
+rtttl:
+  output: rtttl_out

@@ -1,3 +1,9 @@
+substitutions:
+  # URL to call when soldering iron starts getting used
+  url_on: "http://192.168.1.40/cm?cmnd=Power%20On"
+  # URL to call when soldering iron is put back in the holder
+  url_off: "http://192.168.1.40/cm?cmnd=Power%20Off"
+
 esphome:
   name: fumebuddy
   platform: ESP32
@@ -12,6 +18,7 @@ globals:
     type: bool
     restore_value: no
     initial_value: 'false'
+
 
 wifi:
   ssid: !secret wifi_ssid
@@ -32,7 +39,6 @@ captive_portal:
 ota:
 esp32_touch:
   # Use setup_mode for the first time when you want to tune the values of your capacitive sensor
-  # Make sure you have logger enabled
   #setup_mode: true
 
 http_request:
@@ -56,7 +62,7 @@ binary_sensor:
             return id(manual_override) == false;
         then:
           - http_request.get:
-              url: http://192.168.1.40/cm?cmnd=Power%20On
+              url: ${url_on}
           - rtttl.play:
               rtttl: 'scale_up:d=32,o=5,b=100:c,d,e,f,g'
 
@@ -68,7 +74,7 @@ binary_sensor:
             return id(manual_override) == false;
         then:
         - http_request.get:
-            url: http://192.168.1.40/cm?cmnd=Power%20Off
+            url: ${url_off}
         - rtttl.play:
             rtttl: 'scale_down:d=32,o=5,b=100:g,f,e,d,c'
 
@@ -88,14 +94,14 @@ binary_sensor:
             return id(manual_override) == false;
         then:
           - http_request.get:
-              url: http://192.168.1.40/cm?cmnd=Power%20On
+              url: ${url_on}
           - rtttl.play:
               rtttl: 'scale_up:d=32,o=5,b=100:c,d,e,f,g'
           - lambda: |-
               id(manual_override) = true;
         else:
           - http_request.get:
-              url: http://192.168.1.40/cm?cmnd=Power%20Off
+              url: ${url_off}
           - rtttl.play:
               rtttl: 'scale_down:d=32,o=5,b=100:g,f,e,d,c'
           - lambda: |-

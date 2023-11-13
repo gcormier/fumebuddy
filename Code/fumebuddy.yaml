@@ -1,8 +1,8 @@
 substitutions:
-  # URL to call when soldering iron starts getting used
-  url_on: "http://192.168.1.40/cm?cmnd=Power%20On"
-  # URL to call when soldering iron is put back in the holder
-  url_off: "http://192.168.1.40/cm?cmnd=Power%20Off"
+  #url_on: "http://192.168.1.40/cm?cmnd=Power%20On"
+  #url_off: "http://192.168.1.40/cm?cmnd=Power%20Off"
+  url_on: "http://solderfan.local/switch/solder_fan_relay/turn_on"
+  url_off: "http://solderfan.local/switch/solder_fan_relay/turn_off"
 
 esphome:
   name: fumebuddy
@@ -61,7 +61,7 @@ binary_sensor:
           lambda: |-
             return id(manual_override) == false;
         then:
-          - http_request.get:
+          - http_request.post:
               url: ${url_on}
           - rtttl.play:
               rtttl: 'scale_up:d=32,o=5,b=100:c,d,e,f,g'
@@ -73,11 +73,13 @@ binary_sensor:
           lambda: |-
             return id(manual_override) == false;
         then:
-        - http_request.get:
+        - http_request.post:
             url: ${url_off}
         - rtttl.play:
             rtttl: 'scale_down:d=32,o=5,b=100:g,f,e,d,c'
 
+
+  
   - platform: esp32_touch
     name: "ESP32 Touch Pad GPIO2"
     pin: GPIO2
@@ -91,14 +93,14 @@ binary_sensor:
           lambda: |-
             return id(manual_override) == false;
         then:
-          - http_request.get:
+          - http_request.post:
               url: ${url_on}
           - rtttl.play:
               rtttl: 'scale_up:d=32,o=5,b=100:c,d,e,f,g'
           - lambda: |-
               id(manual_override) = true;
         else:
-          - http_request.get:
+          - http_request.post:
               url: ${url_off}
           - rtttl.play:
               rtttl: 'scale_down:d=32,o=5,b=100:g,f,e,d,c'

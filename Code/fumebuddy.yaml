@@ -78,8 +78,6 @@ binary_sensor:
         - rtttl.play:
             rtttl: 'scale_down:d=32,o=5,b=100:g,f,e,d,c'
 
-
-  
   - platform: esp32_touch
     name: "ESP32 Touch Pad GPIO2"
     pin: GPIO2

@@ -9,12 +9,14 @@
 # The default touch threshold is 250. If you want to adjust it, you can enable the touch sensitivity debug mode in the web console and
 # watch the output when the sensor is not being touch and when you touch it.
 
+esphome:
+  name: fumebuddy
+  platform: ESP32
+  board: esp32dev
 
-#substitutions:
-  #url_on: "http://192.168.1.40/cm?cmnd=Power%20On"
-  #url_off: "http://192.168.1.40/cm?cmnd=Power%20Off"
-  #url_on: "http://solderfan.local/switch/solder_fan_relay/turn_on"
-  #url_off: "http://solderfan.local/switch/solder_fan_relay/turn_off"
+  on_boot:
+    then:
+    - rtttl.play: 'scale_up:d=32,o=5,b=100:c,d,e,c,d,e'
 
 text:
   - platform: template
@@ -31,15 +33,6 @@ text:
     mode: text
     restore_value: true
     initial_value: "http://ipaddress/something/turn_on"
-
-esphome:
-  name: fumebuddy
-  platform: ESP32
-  board: esp32dev
-
-  on_boot:
-    then:
-    - rtttl.play: 'scale_up:d=32,o=5,b=100:c,d,e,c,d,e'
 
 globals:
   - id: manual_override

@@ -23,6 +23,8 @@ FumeBuddy is an ESP32 replacement for the switch housing on the Hakko FX-950, FX
 ## Configuration
 FumeBuddy now uses [esphome](https://esphome.io/index.html). You don't need Home Assistant or any sort of smart home. It merely eliminates the need for me to do any custom coding.
 
+<img src="https://github.com/gcormier/fumebuddy/blob/master/docs/esphome_portal.png?raw=true" height="800px" />
+
 When you plug in the device, it will create it's own WiFi access point named `FumebuddyFallback` (Password is `fumebuddy`). You
 can connect to this and it will redirect you to a captive portal where you can enter your WiFi credentials. Once you do this, it will reboot and connect to your WiFi. You can then access it via the IP address it was assigned by your router.
 

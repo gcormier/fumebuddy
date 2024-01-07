@@ -1,8 +1,36 @@
-substitutions:
+# You should have a secrets.yaml file in the same directory with wifi_ssid and wifi_password defined
+# If the wifi fails to connect or is a brand new setup, it will create a wifi network called FumebuddyFallback
+# the password is fumebuddy. Then you can select your wifi network and enter the password.
+
+# Once connected to WIFI, you can access the IP of the device in a browser and it will show you the status of the device.
+# It will also allow you to set the TURN_ON and TURN_OFF URL's appropriately.
+# Logging will also be visible at this URL.
+
+# The default touch threshold is 250. If you want to adjust it, you can enable the touch sensitivity debug mode in the web console and
+# watch the output when the sensor is not being touch and when you touch it.
+
+
+#substitutions:
   #url_on: "http://192.168.1.40/cm?cmnd=Power%20On"
   #url_off: "http://192.168.1.40/cm?cmnd=Power%20Off"
-  url_on: "http://solderfan.local/switch/solder_fan_relay/turn_on"
-  url_off: "http://solderfan.local/switch/solder_fan_relay/turn_off"
+  #url_on: "http://solderfan.local/switch/solder_fan_relay/turn_on"
+  #url_off: "http://solderfan.local/switch/solder_fan_relay/turn_off"
+
+text:
+  - platform: template
+    name: "On URL"
+    id: url_on
+    optimistic: true
+    mode: text
+    restore_value: true
+    initial_value: "http://ipaddress/something/turn_on"
+  - platform: template
+    name: "Off URL"
+    id: url_off
+    optimistic: true
+    mode: text
+    restore_value: true
+    initial_value: "http://ipaddress/something/turn_on"
 
 esphome:
   name: fumebuddy
@@ -11,7 +39,7 @@ esphome:
 
   on_boot:
     then:
-    - rtttl.play: 'scale_up:d=32,o=5,b=100:c,d,e,c,d,e,c,d,e'
+    - rtttl.play: 'scale_up:d=32,o=5,b=100:c,d,e,c,d,e'
 
 globals:
   - id: manual_override
@@ -19,6 +47,9 @@ globals:
     restore_value: no
     initial_value: 'false'
 
+web_server:
+
+logger:
 
 wifi:
   ssid: !secret wifi_ssid
@@ -31,17 +62,14 @@ wifi:
 
 captive_portal:
 
-# Enable logging
-#logger:
-  #level: VERBOSE
-
-
 ota:
 esp32_touch:
+  id: touch_main
   # Use setup_mode for the first time when you want to tune the values of your capacitive sensor
-  #setup_mode: true
+  setup_mode: True
 
 http_request:
+    timeout: 1s
 api:
 
 binary_sensor:
@@ -62,10 +90,10 @@ binary_sensor:
             return id(manual_override) == false;
         then:
           - http_request.post:
-              url: ${url_on}
+              url: !lambda |-
+                return (id(url_on).state);
           - rtttl.play:
-              rtttl: 'scale_up:d=32,o=5,b=100:c,d,e,f,g'
-
+              rtttl: 'scale_up:d=32,o=5,b=100:c,d,e'
     on_release:
     - switch.turn_on: relay_no
     - if:
@@ -74,13 +102,14 @@ binary_sensor:
             return id(manual_override) == false;
         then:
         - http_request.post:
-            url: ${url_off}
+            url: !lambda return (id(url_off).state);
         - rtttl.play:
-            rtttl: 'scale_down:d=32,o=5,b=100:g,f,e,d,c'
+            rtttl: 'scale_down:d=32,o=5,b=100:e,d,c'
 
 
   
   - platform: esp32_touch
+    id: touch_sensor
     name: "ESP32 Touch Pad GPIO2"
     pin: GPIO2
     threshold: 250
@@ -94,24 +123,33 @@ binary_sensor:
             return id(manual_override) == false;
         then:
           - http_request.post:
-              url: ${url_on}
+              url: !lambda return (id(url_on).state);
           - rtttl.play:
-              rtttl: 'scale_up:d=32,o=5,b=100:c,d,e,f,g'
+              rtttl: 'scale_up:d=32,o=5,b=100:c,d,e'
           - lambda: |-
               id(manual_override) = true;
         else:
           - http_request.post:
-              url: ${url_off}
+              url: !lambda return (id(url_off).state);
           - rtttl.play:
-              rtttl: 'scale_down:d=32,o=5,b=100:g,f,e,d,c'
+              rtttl: 'scale_down:d=32,o=5,b=100:e,d,c'
           - lambda: |-
               id(manual_override) = false;
 
 switch:
   - platform: gpio
-    name: "relay_no"
     pin: GPIO12
     id: relay_no
+  - platform: template
+    name: "Touch Sensitivity Debug Mode"
+    id: touch_debug
+    optimistic: true
+    turn_on_action:
+      - lambda: |-
+          id(touch_main).set_setup_mode(true);
+    turn_off_action:
+      - lambda: |-
+          id(touch_main).set_setup_mode(false);
   
 output:
   - platform: ledc
@@ -120,3 +158,18 @@ output:
 
 rtttl:
   output: rtttl_out
+
+number:
+  - platform: template
+    name: "Touch Sensitivity"
+    id: touch_sensitivity
+    optimistic: true
+    mode: box
+    min_value: 1
+    max_value : 32767
+    restore_value: true
+    initial_value: 250
+    step: 1
+    set_action:
+      - lambda: |-
+          id(touch_sensor).set_threshold(x);
